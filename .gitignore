@@ -1,4 +1,4 @@
-# Ignore backups folders as it contains the backup files.
+# Ignore backups folder as it contains the backup files.
 backups/
 
 # Ignore test config.

@@ -6,3 +6,6 @@ configme.py
 
 # Ignore macOS specific file.
 .DS_Store
+
+# Developer log.
+dev.log

@@ -17,7 +17,7 @@ class APIError(Exception):
         self.message = args[0] if args else ''
 
 class TrelloBackup:
-    apiKey,appToken = '','' 
+    backupAttachments = False
     def __init__(self, apiKey, appToken):
         self.apiKey = apiKey
         self.appToken = appToken
@@ -32,6 +32,10 @@ class TrelloBackup:
                 raise SaveError('Failed to create backup folder {}.'.format(self.backupFolder))
         with open(filePath, 'w') as f:
             f.write(fileContent)
+
+    # If enable is True, download and save attachments.
+    def enableBackupAttachments(self, enable):
+        self.backupAttachments = enable
 
     def run(self):
         if len(self.apiKey) < 32: raise ConfigError('API key not set.')
@@ -67,9 +71,20 @@ class TrelloBackup:
             print('Fetching board {} in organization {}'.format(board['name'], orgName))
             fetchURL = 'https://api.trello.com/1/boards/{}?actions=all&actions_limit=1000&card_attachment_fields=all&cards=all&lists=all&members=all&member_fields=all&card_attachment_fields=all&checklists=all&fields=all&key={}&token={}'.format(board['id'], self.apiKey, self.appToken)
             response = requests.get(fetchURL)
-            if not json.loads(response.text): raise APIError('Error fetching the content of board "{}". '.format(board['name']) + response.text)
+            jsonObj = json.loads(response.text)
+            if not jsonObj: raise APIError('Error fetching the content of board "{}". '.format(board['name']) + response.text)
             fileName = sanitize('org-{}-board-{}.json'.format(orgName, board['name']))
             self.save(fileName, response.text)
+
+            if self.backupAttachments:
+                for action in jsonObj['actions']:
+                    # There is attachment data and the attachment has url.
+                    if 'attachment' in action['data'] and 'url' in action['data']['attachment']:
+                        attachment = action['data']['attachment']
+                        print('>>>>Fetching attachment {}: {}'.format(attachment['id'], attachment['name']))
+                        response = requests.get(attachment['url'])
+                        fileName = sanitize('attachment-{}-{}'.format(attachment['id'], attachment['name']))
+                        self.save(fileName, response.text)
         
         print('Done! {} trello boards have been downloaded and saved in "{}" folder.'.format(len(boards), self.backupFolder))
 

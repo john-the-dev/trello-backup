@@ -1,0 +1,5 @@
+# Get API Key from https://trello.com/1/appKey/generate
+apiKey = 'your_api_key'
+
+# Application Token. After config the apiKey, run main.py and it will guide you to create an application token.
+appToken = 'your_application_token'

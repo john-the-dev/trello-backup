@@ -1,0 +1,8 @@
+# Ignore backups folders as it contains the backup files.
+backups/
+
+# Ignore test config.
+configme.py
+
+# Ignore macOS specific file.
+.DS_Store

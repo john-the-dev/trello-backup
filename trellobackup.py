@@ -67,7 +67,10 @@ class TrelloBackup:
         
         # Load content for each board and save it to file.
         for board in boards:
-            orgName = orgsDict[board['idOrganization']]['displayName'] if board['idOrganization'] != None else ''
+            if board['idOrganization'] != None:
+                orgName = orgsDict[board['idOrganization']]['displayName'] if board['idOrganization'] != None and board['idOrganization'] in orgsDict else board['idOrganization']
+            else:
+                orgName = "UNKNONWN"
             print('Fetching board {} in organization {}'.format(board['name'], orgName))
             fetchURL = 'https://api.trello.com/1/boards/{}?actions=all&actions_limit=1000&card_attachment_fields=all&cards=all&lists=all&members=all&member_fields=all&card_attachment_fields=all&checklists=all&fields=all&key={}&token={}'.format(board['id'], self.apiKey, self.appToken)
             response = requests.get(fetchURL)

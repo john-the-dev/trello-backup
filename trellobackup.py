@@ -1,3 +1,4 @@
+from collections import defaultdict
 import requests
 import datetime
 import os
@@ -13,6 +14,10 @@ class SaveError(Exception):
         self.message = args[0] if args else ''
 
 class APIError(Exception):
+    def __init__(self, *args):
+        self.message = args[0] if args else ''
+
+class InputError(Exception):
     def __init__(self, *args):
         self.message = args[0] if args else ''
 
@@ -32,6 +37,33 @@ class TrelloBackup:
                 raise SaveError('Failed to create backup folder {}.'.format(self.backupFolder))
         with open(filePath, 'w') as f:
             f.write(fileContent)
+
+    def json2txt(self, jsonFilePath):
+        if not jsonFilePath or jsonFilePath[-5:].lower() != ".json":
+            raise InputError(f"jsonFilePath {jsonFilePath} is not a JSON file")
+        
+        with open(jsonFilePath, 'r') as f:
+            data = json.load(f)
+
+        actions = defaultdict(list)
+        for action in data["actions"]:
+            if "text" in action["data"]:
+                actions[action["data"]["card"]["id"]].append([action["date"], action["data"]["text"]])
+
+        txtFilePath = f"{jsonFilePath[:-5]}.txt"
+        with open(txtFilePath, 'w') as f:
+            f.write(f"{data['name']}\n{data['desc']}\n\n")
+
+            for card in data["cards"]:
+                card_id = card["id"]
+                if actions[card_id]:
+                    f.write(f"{card['name']}\n{card['desc']}\n")
+
+                    actions[card_id].sort()
+                    for action in actions[card_id]:
+                        f.write(f"    {action[0]}: {action[1]}\n")
+                    f.write("\n")
+                
 
     # If enable is True, download and save attachments.
     def enableBackupAttachments(self, enable):
